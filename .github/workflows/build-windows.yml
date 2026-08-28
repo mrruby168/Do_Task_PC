@@ -1,0 +1,40 @@
+name: Build Windows Executable (OneDir)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Cho phép bạn chạy thủ công từ tab "Actions" trên GitHub
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build Executable with PyInstaller (OneDir)
+        run: |
+          # --onedir: Tạo một thư mục chứa exe và các file phụ thuộc (tối ưu cho app có GUI + Server)
+          # --noconsole: Ẩn cửa sổ console đen khi chạy (phù hợp ứng dụng GUI PySide6). 
+          # Nếu bạn cần xem log của FastAPI/Uvicorn, hãy xóa tham số --noconsole này.
+          # --clean: Dọn dẹp cache trước khi build để tránh lỗi cũ
+          pyinstaller --name "PC_Tool_Server" --onedir --noconsole --clean app/main.py
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PC-Tool-Server-Windows-OneDir
+          path: dist/PC_Tool_Server/
+          retention-days: 30 # Lưu file build trong 30 ngày
